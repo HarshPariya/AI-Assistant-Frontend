@@ -10,6 +10,16 @@ export const api = axios.create({
 // ── Health ─────────────────────────────────────────────────────────────────
 export const checkHealth = () => api.get("/health");
 
+// ── General Chat & Image Generation ────────────────────────────────────────
+export const sendGeneralChat = (messages: Array<{ role: string; content: string }>, file?: File) => {
+  const form = new FormData();
+  form.append("messages", JSON.stringify(messages));
+  if (file) {
+    form.append("file", file);
+  }
+  return api.post("/general/ask", form);
+};
+
 // ── Resume Reviewer ────────────────────────────────────────────────────────
 export const analyzeResume = (file: File) => {
   const form = new FormData();
@@ -77,3 +87,23 @@ export const analyzeImage = (file: File) => {
 
 export const askAboutImage = (session_id: string, question: string) =>
   api.post("/vision/ask", { session_id, question });
+
+// ── History ────────────────────────────────────────────────────────────────
+export const saveConversation = (data: {
+  user_id: string;
+  module?: string;
+  title?: string;
+  messages: Array<{ role: string; content: string; id?: string }>;
+  session_id?: string;
+}) => api.post("/history/save", data);
+
+export const getUserHistory = (user_id: string, module?: string) =>
+  api.get(`/history/user/${encodeURIComponent(user_id)}`, {
+    params: module ? { module } : undefined,
+  });
+
+export const getConversation = (session_id: string) =>
+  api.get(`/history/session/${session_id}`);
+
+export const deleteConversation = (session_id: string, user_id: string) =>
+  api.delete(`/history/session/${session_id}`, { params: { user_id } });
