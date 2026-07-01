@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { FileText, TrendingUp, Target, AlertTriangle, CheckCircle2, Lightbulb, Briefcase, Upload } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
-import { analyzeResume } from "@/lib/api";
+import { analyzeResume, saveConversation } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import { useRef } from "react";
 
 interface ResumeAnalysis {
   ats_score: number;
@@ -71,6 +73,8 @@ function BreakdownBar({ label, value, max }: { label: string; value: number; max
 }
 
 export default function ResumePage() {
+  const { data: session } = useSession();
+  const historySessionId = useRef<string | undefined>(undefined);
   const [analysis, setAnalysis] = useState<ResumeAnalysis | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -79,9 +83,28 @@ export default function ResumePage() {
     setIsLoading(true);
     setError("");
     setAnalysis(null);
+    historySessionId.current = undefined;
     try {
       const res = await analyzeResume(file);
       setAnalysis(res.data);
+      
+      if (session?.user?.email) {
+        try {
+          const saveRes = await saveConversation({
+            user_id: session.user.email,
+            module: "resume",
+            title: `Resume Review`,
+            messages: [
+              { role: "user", content: `Uploaded Resume: ${file.name}` },
+              { role: "assistant", content: `ATS Score: ${res.data.ats_score}/100\n\n${res.data.overall_feedback}` }
+            ],
+            session_id: historySessionId.current,
+          });
+          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+        } catch (e) {
+          console.warn("History save failed:", e);
+        }
+      }
     } catch (e: any) {
       setError(e.response?.data?.detail || "Failed to analyze resume. Please try again.");
     } finally {
