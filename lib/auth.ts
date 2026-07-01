@@ -8,6 +8,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   callbacks: {
     async session({ session, token }) {
       if (session.user && token.sub) {
@@ -22,7 +24,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
   },
-  pages: {
-    signIn: "/auth/signin",
-  },
 });
+
+
