@@ -4,9 +4,13 @@ import { useState } from "react";
 import { MessageSquare, Upload, Trash2 } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import ChatInterface, { Message } from "@/components/ChatInterface";
-import { uploadChatPDF, askChatQuestion } from "@/lib/api";
+import { uploadChatPDF, askChatQuestion, saveConversation } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import { useRef } from "react";
 
 export default function ChatbotPage() {
+  const { data: session } = useSession();
+  const historySessionId = useRef<string | undefined>(undefined);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [chunkCount, setChunkCount] = useState(0);
@@ -18,6 +22,7 @@ export default function ChatbotPage() {
   const handleUpload = async (file: File) => {
     setIsUploading(true);
     setUploadError("");
+    historySessionId.current = undefined;
     try {
       const res = await uploadChatPDF(file);
       setSessionId(res.data.session_id);
@@ -49,16 +54,34 @@ export default function ChatbotPage() {
     setIsChatLoading(true);
     try {
       const res = await askChatQuestion(sessionId, message);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ai-${Date.now()}`,
-          role: "assistant",
-          content: res.data.answer,
-          sources: res.data.sources,
-          timestamp: new Date(),
-        },
-      ]);
+      
+      const userMessage = { id: `user-${Date.now()}`, role: "user" as const, content: message, timestamp: new Date() };
+      const assistantMessage = {
+        id: `ai-${Date.now()}`,
+        role: "assistant" as const,
+        content: res.data.answer,
+        sources: res.data.sources,
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev.filter(m => m.id !== userMessage.id), userMessage, assistantMessage]);
+
+      if (session?.user?.email) {
+        try {
+          // get latest messages from state but it's tricky, better to construct it
+          const allMsgs = [...messages, userMessage, assistantMessage];
+          const saveRes = await saveConversation({
+            user_id: session.user.email,
+            module: "chatbot",
+            title: `PDF Chat: ${fileName}`,
+            messages: allMsgs.map(m => ({ role: m.role, content: m.content, id: m.id })),
+            session_id: historySessionId.current,
+          });
+          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+        } catch (e) {
+          console.warn("History save failed:", e);
+        }
+      }
     } catch (e: any) {
       setMessages((prev) => [
         ...prev,
@@ -76,6 +99,7 @@ export default function ChatbotPage() {
 
   const reset = () => {
     setSessionId(null);
+    historySessionId.current = undefined;
     setFileName("");
     setMessages([]);
     setUploadError("");

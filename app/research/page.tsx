@@ -3,8 +3,10 @@
 import { useState } from "react";
 import { BookOpen, Upload, FileText, Loader2, ChevronRight, Sparkles, GitCompare, BookMarked, Key, MessageSquare, AlertCircle, RefreshCw } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
-import { uploadResearchPDFs, performResearchAction } from "@/lib/api";
+import { uploadResearchPDFs, performResearchAction, saveConversation } from "@/lib/api";
 import ReactMarkdown from "react-markdown";
+import { useSession } from "next-auth/react";
+import { useRef } from "react";
 
 interface DocInfo {
   doc_id: number;
@@ -23,6 +25,8 @@ const ACTIONS = [
 ];
 
 export default function ResearchPage() {
+  const { data: session } = useSession();
+  const historySessionId = useRef<string | undefined>(undefined);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [documents, setDocuments] = useState<DocInfo[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -38,6 +42,7 @@ export default function ResearchPage() {
     if (!files.length) return;
     setIsUploading(true);
     setUploadError("");
+    historySessionId.current = undefined;
     try {
       const res = await uploadResearchPDFs(files);
       setSessionId(res.data.session_id);
@@ -62,6 +67,26 @@ export default function ResearchPage() {
         query: actionId === "ask" ? customQuery : undefined,
       });
       setResult(res.data.result);
+      
+      if (session?.user?.email) {
+        try {
+          const actionLabel = ACTIONS.find(a => a.id === actionId)?.label || actionId;
+          const userContent = actionId === "ask" ? `Asked: ${customQuery}` : `Action: ${actionLabel}`;
+          const saveRes = await saveConversation({
+            user_id: session.user.email,
+            module: "research",
+            title: `Research on ${documents.length} Docs`,
+            messages: [
+              { role: "user", content: userContent },
+              { role: "assistant", content: res.data.result }
+            ],
+            session_id: historySessionId.current,
+          });
+          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+        } catch (e) {
+          console.warn("History save failed:", e);
+        }
+      }
     } catch (e: any) {
       setActionError(e.response?.data?.detail || "Action failed.");
     } finally {
@@ -71,6 +96,7 @@ export default function ResearchPage() {
 
   const reset = () => {
     setSessionId(null);
+    historySessionId.current = undefined;
     setDocuments([]);
     setResult("");
     setActiveAction(null);

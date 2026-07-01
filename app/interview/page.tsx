@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { Mic, ChevronDown, Play, RotateCcw, Star, CheckCircle, MessageSquare, Lightbulb } from "lucide-react";
-import { getRoles, generateQuestions, evaluateMockAnswer } from "@/lib/api";
+import { getRoles, generateQuestions, evaluateMockAnswer, saveConversation } from "@/lib/api";
 import ChatInterface, { Message } from "@/components/ChatInterface";
+import { useSession } from "next-auth/react";
+import { useRef } from "react";
 
 interface Question {
   id: number;
@@ -16,6 +18,8 @@ interface Question {
 }
 
 export default function InterviewPage() {
+  const { data: session } = useSession();
+  const historySessionId = useRef<string | undefined>(undefined);
   const [roles, setRoles] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState("AI/ML Engineer");
   const [experienceLevel, setExperienceLevel] = useState("mid");
@@ -62,6 +66,7 @@ export default function InterviewPage() {
     setMockMode(true);
     setCurrentQIdx(0);
     setConversationHistory([]);
+    historySessionId.current = undefined;
     setMessages([
       {
         id: "welcome",
@@ -76,10 +81,8 @@ export default function InterviewPage() {
     const currentQ = questions[currentQIdx];
     if (!currentQ) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: `user-${currentQIdx}`, role: "user", content: userAnswer, timestamp: new Date() },
-    ]);
+    const userMessage = { id: `user-${currentQIdx}`, role: "user" as const, content: userAnswer, timestamp: new Date() };
+    setMessages((prev) => [...prev, userMessage]);
 
     setMockLoading(true);
     try {
@@ -111,11 +114,28 @@ export default function InterviewPage() {
         responseContent += "---\n\n🎉 **Mock interview complete!** Great job! Feel free to restart with a new set of questions.";
       }
 
+      const assistantMsg = { id: `ai-${currentQIdx}`, role: "assistant" as const, content: responseContent, timestamp: new Date() };
+      
+      const allMsgs = [...messages, userMessage, assistantMsg];
+
       setConversationHistory((prev) => [...prev, { question: currentQ.question, answer: userAnswer }]);
-      setMessages((prev) => [
-        ...prev,
-        { id: `ai-${currentQIdx}`, role: "assistant", content: responseContent, timestamp: new Date() },
-      ]);
+      setMessages(() => allMsgs);
+
+      if (session?.user?.email) {
+        try {
+          const saveRes = await saveConversation({
+            user_id: session.user.email,
+            module: "interview",
+            title: `Mock Interview: ${selectedRole}`,
+            messages: allMsgs.map(m => ({ role: m.role, content: m.content, id: m.id })),
+            session_id: historySessionId.current,
+          });
+          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+        } catch (e) {
+          console.warn("History save failed:", e);
+        }
+      }
+
     } catch (e: any) {
       setMessages((prev) => [
         ...prev,

@@ -4,7 +4,9 @@ import { useState } from "react";
 import { Camera, Upload, Image as ImageIcon, Tag, Eye, Loader2, X } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import ChatInterface, { Message } from "@/components/ChatInterface";
-import { analyzeImage, askAboutImage } from "@/lib/api";
+import { analyzeImage, askAboutImage, saveConversation } from "@/lib/api";
+import { useSession } from "next-auth/react";
+import { useRef } from "react";
 
 interface VisionAnalysis {
   session_id: string;
@@ -16,6 +18,8 @@ interface VisionAnalysis {
 }
 
 export default function VisionPage() {
+  const { data: session } = useSession();
+  const historySessionId = useRef<string | undefined>(undefined);
   const [analysis, setAnalysis] = useState<VisionAnalysis | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -29,6 +33,7 @@ export default function VisionPage() {
     setIsAnalyzing(true);
     setUploadError("");
     setAnalysis(null);
+    historySessionId.current = undefined;
     setMessages([]);
 
     try {
@@ -54,18 +59,30 @@ export default function VisionPage() {
   const handleAsk = async (question: string) => {
     if (!analysis) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: `user-${Date.now()}`, role: "user", content: question, timestamp: new Date() },
-    ]);
+    const userMessage = { id: `user-${Date.now()}`, role: "user" as const, content: question, timestamp: new Date() };
+    setMessages((prev) => [...prev, userMessage]);
 
     setIsChatLoading(true);
     try {
       const res = await askAboutImage(analysis.session_id, question);
-      setMessages((prev) => [
-        ...prev,
-        { id: `ai-${Date.now()}`, role: "assistant", content: res.data.answer, timestamp: new Date() },
-      ]);
+      const assistantMessage = { id: `ai-${Date.now()}`, role: "assistant" as const, content: res.data.answer, timestamp: new Date() };
+      const allMsgs = [...messages, userMessage, assistantMessage];
+      setMessages(() => allMsgs);
+
+      if (session?.user?.email) {
+        try {
+          const saveRes = await saveConversation({
+            user_id: session.user.email,
+            module: "vision",
+            title: `Image Analysis`,
+            messages: allMsgs.map(m => ({ role: m.role, content: m.content, id: m.id })),
+            session_id: historySessionId.current,
+          });
+          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+        } catch (e) {
+          console.warn("History save failed:", e);
+        }
+      }
     } catch (e: any) {
       setMessages((prev) => [
         ...prev,
@@ -79,6 +96,7 @@ export default function VisionPage() {
   const reset = () => {
     setAnalysis(null);
     setPreviewUrl("");
+    historySessionId.current = undefined;
     setMessages([]);
     setUploadError("");
   };
