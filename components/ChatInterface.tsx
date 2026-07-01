@@ -92,7 +92,7 @@ export default function ChatInterface({
   return (
     <div className="flex flex-col h-full relative">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-5">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-5 space-y-5 pb-20 md:pb-5">
         {messages.length === 0 ? (
           emptyStateComponent ? emptyStateComponent : (
             <div className="flex flex-col items-center justify-center h-full text-center py-16 animate-fade-in">
@@ -273,7 +273,7 @@ export default function ChatInterface({
       </div>
 
       {/* Input Area */}
-      <div className="px-4 md:px-5 py-4 relative" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+      <div className="px-4 md:px-5 py-4 relative z-10" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "var(--bg)" }}>
         {/* File preview pill above input */}
         {selectedFile && (
           <div className="absolute -top-14 left-4 animate-slide-up flex items-center gap-2 px-3 py-2 rounded-xl shadow-xl"
@@ -317,7 +317,7 @@ export default function ChatInterface({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             rows={1}
-            className="w-full bg-transparent text-sm resize-none outline-none max-h-40 leading-relaxed py-1"
+            className="w-full bg-transparent text-sm resize-none outline-none max-h-40 leading-relaxed py-1 placeholder-opacity-70"
             style={{ color: "var(--fg)" }}
           />
 

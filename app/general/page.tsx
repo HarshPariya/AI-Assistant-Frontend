@@ -72,7 +72,6 @@ export default function GeneralChatPage() {
         }
       }
     } catch (error: any) {
-      console.error(error);
       setMessages((prev) => [
         ...prev,
         {

@@ -9,9 +9,17 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "avatars.githubusercontent.com", // good to have for future
+        hostname: "avatars.githubusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "image.pollinations.ai",
       },
     ],
+  },
+  // Optimize imports for faster builds and smaller bundles
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
   },
 };
 

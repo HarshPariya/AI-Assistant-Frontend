@@ -88,122 +88,177 @@ export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Close mobile sidebar on route change
   useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  // Ping backend on mount to prevent Render cold starts
+  useEffect(() => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    fetch(`${API_URL}/health`, { method: "GET", cache: "no-store" }).catch(() => {});
+  }, []);
+
+  // Prevent body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
 
   return (
     <>
-      {/* Mobile hamburger */}
+      {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 w-9 h-9 rounded-xl flex items-center justify-center"
-        style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}
+        className="md:hidden fixed top-4 left-4 z-[60] w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+        style={{
+          background: "rgba(255,255,255,0.06)",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}
         aria-label="Open menu"
       >
         <Menu size={18} style={{ color: "var(--fg)" }} />
       </button>
 
-      {/* Mobile overlay */}
+      {/* Mobile backdrop overlay */}
       {mobileOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40"
-          style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }}
+          className="md:hidden fixed inset-0 z-[55]"
+          style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
           onClick={() => setMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar panel */}
       <aside
-        className={`fixed md:relative flex flex-col h-screen transition-all duration-300 z-50
+        className={`
+          fixed md:relative flex flex-col h-screen z-[58]
+          transition-transform duration-300 ease-in-out
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-          ${collapsed ? "w-[68px]" : "w-[240px]"}`}
+          ${collapsed ? "w-[68px]" : "w-[240px]"}
+        `}
         style={{
-          background: "rgba(6,8,16,0.85)",
+          background: "rgba(6,8,16,0.95)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
           backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          flexShrink: 0,
         }}
       >
-        {/* Mobile close */}
+        {/* Mobile close button */}
         <button
           onClick={() => setMobileOpen(false)}
-          className="md:hidden absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center"
-          style={{ color: "var(--muted)" }}
+          className="md:hidden absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+          style={{ color: "var(--muted)", background: "rgba(255,255,255,0.04)" }}
+          aria-label="Close menu"
         >
-          <X size={18} />
+          <X size={16} />
         </button>
 
         {/* Logo */}
         <Link
           href="/"
-          className="flex items-center gap-3 px-4 py-5 transition-all duration-200"
+          className="flex items-center gap-3 px-4 py-5 transition-all duration-200 hover:bg-white/5"
           style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
         >
           {/* Animated logo mark */}
-          <div className="relative flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #6366f1, #22d3ee)" }}>
-            <div className="absolute inset-0 rounded-xl animate-spin-slow"
-              style={{ background: "conic-gradient(from 0deg, transparent 60%, rgba(255,255,255,0.3) 100%)" }} />
+          <div
+            className="relative flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #6366f1, #22d3ee)" }}
+          >
+            <div
+              className="absolute inset-0 rounded-xl animate-spin-slow"
+              style={{ background: "conic-gradient(from 0deg, transparent 60%, rgba(255,255,255,0.3) 100%)" }}
+            />
             <Zap size={15} className="relative z-10 text-white" />
           </div>
 
           {!collapsed && (
             <div className="overflow-hidden">
-              <p className="text-sm font-bold leading-tight" style={{ color: "var(--fg)" }}>AI Platform</p>
-              <p className="text-[10px] leading-tight" style={{ color: "var(--muted)" }}>Career & Research</p>
+              <p className="text-sm font-bold leading-tight" style={{ color: "var(--fg)" }}>
+                AI Platform
+              </p>
+              <p className="text-[10px] leading-tight" style={{ color: "var(--muted)" }}>
+                Career &amp; Research
+              </p>
             </div>
           )}
         </Link>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 space-y-1 px-3 overflow-y-auto">
+        <nav className="flex-1 py-4 space-y-0.5 px-3 overflow-y-auto">
           {!collapsed && (
-            <div className="mb-4 px-1">
-              <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-400/80 uppercase">System Modules</p>
+            <div className="mb-3 px-1">
+              <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-400/80 uppercase">
+                System Modules
+              </p>
             </div>
           )}
-          {navItems.map(({ href, icon: Icon, label, description, accent, color }) => {
+          {navItems.map(({ href, icon: Icon, label, accent }) => {
             const isActive = pathname === href;
             return (
               <Link
                 key={href}
                 href={href}
-                className={`group flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-300`}
-                style={isActive ? {
-                  background: "rgba(34,211,238,0.03)",
-                  border: `1px solid rgba(34,211,238,0.15)`,
-                  boxShadow: `inset 0 0 10px rgba(34,211,238,0.05)`,
-                } : {
-                  border: "1px solid transparent",
+                className={`group flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  collapsed ? "justify-center" : ""
+                }`}
+                style={
+                  isActive
+                    ? {
+                        background: "rgba(34,211,238,0.05)",
+                        border: `1px solid rgba(34,211,238,0.18)`,
+                        boxShadow: `inset 0 0 10px rgba(34,211,238,0.05)`,
+                      }
+                    : {
+                        border: "1px solid transparent",
+                      }
+                }
+                onMouseEnter={(e) => {
+                  if (!isActive)
+                    (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.04)";
                 }}
-                onMouseEnter={e => {
-                  if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.03)";
-                }}
-                onMouseLeave={e => {
-                  if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                onMouseLeave={(e) => {
+                  if (!isActive)
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
                 }}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   {/* Icon */}
                   <div className="flex-shrink-0 w-6 h-6 flex items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                    <Icon size={14} style={{ color: isActive ? accent : "var(--muted)" }} />
+                    <Icon
+                      size={15}
+                      style={{ color: isActive ? accent : "var(--muted)" }}
+                    />
                   </div>
 
                   {!collapsed && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-bold leading-tight truncate transition-colors uppercase tracking-wider"
-                        style={{ color: isActive ? "var(--fg)" : "var(--muted)", textShadow: isActive ? `0 0 8px ${accent}60` : "none" }}>
+                      <p
+                        className="text-[11px] font-semibold leading-tight truncate transition-colors uppercase tracking-wider"
+                        style={{
+                          color: isActive ? "var(--fg)" : "var(--muted)",
+                          textShadow: isActive ? `0 0 8px ${accent}60` : "none",
+                        }}
+                      >
                         {label}
                       </p>
                     </div>
                   )}
                 </div>
-                
-                {/* Glowing Dot Indicator */}
+
+                {/* Glowing dot indicator */}
                 {!collapsed && (
-                  <span className={`flex-shrink-0 w-1.5 h-1.5 rounded-full transition-all duration-300 ${isActive ? 'animate-pulse' : 'opacity-20'}`}
-                    style={{ 
-                      background: isActive ? accent : 'var(--muted)',
-                      boxShadow: isActive ? `0 0 8px ${accent}, 0 0 4px ${accent}` : 'none'
-                    }} 
+                  <span
+                    className={`flex-shrink-0 w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      isActive ? "animate-pulse" : "opacity-20"
+                    }`}
+                    style={{
+                      background: isActive ? accent : "var(--muted)",
+                      boxShadow: isActive ? `0 0 8px ${accent}, 0 0 4px ${accent}` : "none",
+                    }}
                   />
                 )}
               </Link>
@@ -211,20 +266,20 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Footer – status + user menu */}
+        {/* Footer — status + user menu */}
         {!collapsed && (
           <div className="px-4 py-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#34d399" }} />
               <p className="text-[0.65rem]" style={{ color: "var(--faint)" }}>
-                Powered by Groq + LangChain
+                Groq + LangChain
               </p>
             </div>
           </div>
         )}
         <UserMenu collapsed={collapsed} />
 
-        {/* Collapse toggle (desktop) */}
+        {/* Collapse toggle (desktop only) */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="hidden md:flex absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full items-center justify-center z-10 transition-colors duration-200"

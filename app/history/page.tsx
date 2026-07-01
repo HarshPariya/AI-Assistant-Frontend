@@ -67,7 +67,7 @@ export default function HistoryPage() {
   return (
     <div className="flex flex-col h-screen w-full relative">
       {/* Header */}
-      <div className="px-6 py-4 flex items-center justify-between sticky top-0 z-20"
+      <div className="px-6 py-4 pl-16 md:pl-6 flex items-center justify-between sticky top-0 z-20"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,16,0.8)", backdropFilter: "blur(16px)" }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-cyan-500/10 border border-cyan-500/20">

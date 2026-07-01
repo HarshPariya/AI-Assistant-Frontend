@@ -10,6 +10,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   trustHost: true,
+  debug: false,
+  pages: {
+    signIn: "/",      // redirect to home if sign-in fails
+    error: "/",       // redirect to home on error (prevents blank error pages)
+  },
   callbacks: {
     async session({ session, token }) {
       if (session.user && token.sub) {
@@ -25,5 +30,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
-
-
