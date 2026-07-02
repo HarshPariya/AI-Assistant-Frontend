@@ -4,7 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const api = axios.create({
   baseURL: API_URL,
-  timeout: 60000, // 60s — Groq responses typically under 5s
+  timeout: 120000, // 2 min — PDF uploads + embedding can take longer
 });
 
 // ── Health ─────────────────────────────────────────────────────────────────
@@ -52,6 +52,7 @@ export const uploadChatPDF = (file: File) => {
   form.append("file", file);
   return api.post("/chat/upload", form, {
     headers: { "Content-Type": "multipart/form-data" },
+    timeout: 180000,
   });
 };
 
@@ -67,6 +68,7 @@ export const uploadResearchPDFs = (files: File[]) => {
   files.forEach((f) => form.append("files", f));
   return api.post("/research/upload", form, {
     headers: { "Content-Type": "multipart/form-data" },
+    timeout: 180000,
   });
 };
 

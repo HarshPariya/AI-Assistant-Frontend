@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Mic, ChevronDown, Play, RotateCcw, Star, CheckCircle, MessageSquare, Lightbulb } from "lucide-react";
@@ -19,7 +21,7 @@ interface Question {
   model_answer?: string;
 }
 
-export default function InterviewPage() {
+function InterviewContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const historySessionId = useRef<string | undefined>(undefined);
@@ -52,6 +54,18 @@ export default function InterviewPage() {
         setMessages(saved.messages.map((m) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
       }
       if (saved.historySessionId) historySessionId.current = saved.historySessionId;
+    },
+    onMongoRestore: (data) => {
+      historySessionId.current = data.id;
+      if (data.messages?.length) {
+        setMessages(data.messages.map((m) => ({
+          id: m.id || `${m.role}-${Math.random()}`,
+          role: m.role as "user" | "assistant",
+          content: m.content,
+          timestamp: new Date(),
+        })));
+        setMockMode(true);
+      }
     },
   });
 
@@ -89,6 +103,27 @@ export default function InterviewPage() {
         num_questions: 10,
       });
       setQuestions(res.data.questions);
+
+      if (session?.user?.email) {
+        try {
+          const summary = res.data.questions
+            .map((q: Question, i: number) => `${i + 1}. ${q.question}`)
+            .join("\n");
+          const saveRes = await saveConversation({
+            user_id: session.user.email,
+            module: "interview",
+            title: `Interview Questions: ${selectedRole}`,
+            messages: [
+              { role: "user", content: `Generate ${res.data.total} questions for ${selectedRole} (${experienceLevel})`, id: "gen-req" },
+              { role: "assistant", content: summary, id: "gen-res" },
+            ],
+            session_id: historySessionId.current,
+          });
+          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+        } catch (e) {
+          console.warn("History save failed:", e);
+        }
+      }
     } catch (e: any) {
       setError(e.response?.data?.detail || "Failed to generate questions.");
     } finally {
@@ -273,7 +308,7 @@ export default function InterviewPage() {
               <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: "#34d399" }} />
               <span className="text-sm font-medium" style={{ color: "var(--fg)" }}>Mock Interview — {selectedRole}</span>
             </div>
-            <button onClick={() => setMockMode(false)}
+            <button onClick={() => { setMockMode(false); clearModuleState("interview"); }}
               className="flex items-center gap-1 text-xs transition-colors"
               style={{ color: "var(--faint)" }}
               onMouseEnter={e => (e.currentTarget.style.color = "var(--muted)")}
@@ -348,5 +383,13 @@ export default function InterviewPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function InterviewPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-[var(--muted)]">Loading...</div>}>
+      <InterviewContent />
+    </Suspense>
   );
 }

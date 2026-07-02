@@ -48,6 +48,29 @@ export default function VisionPage() {
           timestamp: new Date(),
         },
       ]);
+
+      if (session?.user?.email) {
+        try {
+          const initialMessages = [
+            { role: "user", content: `Uploaded image for analysis`, id: "upload" },
+            {
+              role: "assistant",
+              content: `Caption: ${data.caption}\n\nDescription: ${data.description}\n\nMood: ${data.mood}`,
+              id: "caption",
+            },
+          ];
+          const saveRes = await saveConversation({
+            user_id: session.user.email,
+            module: "vision",
+            title: "Image Analysis",
+            messages: initialMessages,
+            session_id: historySessionId.current,
+          });
+          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+        } catch (e) {
+          console.warn("History save failed:", e);
+        }
+      }
     } catch (e: any) {
       setUploadError(e.response?.data?.detail || "Failed to analyze image.");
       setPreviewUrl("");

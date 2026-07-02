@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { useState, useRef, useEffect } from "react";
 import { MessageSquare, Upload, Trash2 } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
@@ -10,7 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { useModulePersistence } from "@/hooks/useModulePersistence";
 import { clearModuleState } from "@/lib/moduleState";
 
-export default function ChatbotPage() {
+function ChatbotContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const historySessionId = useRef<string | undefined>(undefined);
@@ -87,42 +89,45 @@ export default function ChatbotPage() {
   const handleAsk = async (message: string) => {
     if (!sessionId) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { id: `user-${Date.now()}`, role: "user", content: message, timestamp: new Date() },
-    ]);
-
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: message,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, userMessage]);
     setIsChatLoading(true);
+
     try {
       const res = await askChatQuestion(sessionId, message);
-      
-      const userMessage = { id: `user-${Date.now()}`, role: "user" as const, content: message, timestamp: new Date() };
-      const assistantMessage = {
+
+      const assistantMessage: Message = {
         id: `ai-${Date.now()}`,
-        role: "assistant" as const,
+        role: "assistant",
         content: res.data.answer,
         sources: res.data.sources,
         timestamp: new Date(),
       };
-      
-      setMessages((prev) => [...prev.filter(m => m.id !== userMessage.id), userMessage, assistantMessage]);
 
-      if (session?.user?.email) {
-        try {
-          // get latest messages from state but it's tricky, better to construct it
-          const allMsgs = [...messages, userMessage, assistantMessage];
-          const saveRes = await saveConversation({
+      setMessages((prev) => {
+        const updated = [...prev, assistantMessage];
+
+        if (session?.user?.email) {
+          saveConversation({
             user_id: session.user.email,
             module: "chatbot",
             title: `PDF Chat: ${fileName}`,
-            messages: allMsgs.map(m => ({ role: m.role, content: m.content, id: m.id })),
+            messages: updated.map((m) => ({ role: m.role, content: m.content, id: m.id })),
             session_id: historySessionId.current,
-          });
-          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
-        } catch (e) {
-          console.warn("History save failed:", e);
+          })
+            .then((saveRes) => {
+              if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+            })
+            .catch((e) => console.warn("History save failed:", e));
         }
-      }
+
+        return updated;
+      });
     } catch (e: any) {
       setMessages((prev) => [
         ...prev,
@@ -224,5 +229,13 @@ export default function ChatbotPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ChatbotPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-[var(--muted)]">Loading...</div>}>
+      <ChatbotContent />
+    </Suspense>
   );
 }

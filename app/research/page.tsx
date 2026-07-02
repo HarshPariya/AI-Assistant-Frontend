@@ -27,6 +27,7 @@ const ACTIONS = [
 export default function ResearchPage() {
   const { data: session } = useSession();
   const historySessionId = useRef<string | undefined>(undefined);
+  const historyMessages = useRef<Array<{ role: string; content: string; id?: string }>>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [documents, setDocuments] = useState<DocInfo[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -43,6 +44,7 @@ export default function ResearchPage() {
     setIsUploading(true);
     setUploadError("");
     historySessionId.current = undefined;
+    historyMessages.current = [];
     try {
       const res = await uploadResearchPDFs(files);
       setSessionId(res.data.session_id);
@@ -72,14 +74,17 @@ export default function ResearchPage() {
         try {
           const actionLabel = ACTIONS.find(a => a.id === actionId)?.label || actionId;
           const userContent = actionId === "ask" ? `Asked: ${customQuery}` : `Action: ${actionLabel}`;
+          const newMessages = [
+            ...historyMessages.current,
+            { role: "user", content: userContent, id: `user-${Date.now()}` },
+            { role: "assistant", content: res.data.result, id: `ai-${Date.now()}` },
+          ];
+          historyMessages.current = newMessages;
           const saveRes = await saveConversation({
             user_id: session.user.email,
             module: "research",
             title: `Research on ${documents.length} Docs`,
-            messages: [
-              { role: "user", content: userContent },
-              { role: "assistant", content: res.data.result }
-            ],
+            messages: newMessages,
             session_id: historySessionId.current,
           });
           if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
@@ -97,6 +102,7 @@ export default function ResearchPage() {
   const reset = () => {
     setSessionId(null);
     historySessionId.current = undefined;
+    historyMessages.current = [];
     setDocuments([]);
     setResult("");
     setActiveAction(null);

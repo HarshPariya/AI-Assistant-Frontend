@@ -199,7 +199,21 @@ export default function ChatInterface({
                   {/* Content */}
                   {msg.role === "assistant" ? (
                     <div className="prose prose-invert prose-sm max-w-none break-words">
-                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      <ReactMarkdown
+                        components={{
+                          img: ({ src, alt }) => (
+                            <img
+                              src={src}
+                              alt={alt || "Generated image"}
+                              referrerPolicy="no-referrer"
+                              className="rounded-xl max-w-full mt-2 border border-white/10"
+                              loading="lazy"
+                            />
+                          ),
+                        }}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
                   ) : (
                     <p>{msg.content}</p>

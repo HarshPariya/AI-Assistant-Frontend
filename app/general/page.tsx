@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
@@ -15,7 +17,7 @@ const SUGGESTIONS = [
   { icon: Zap, text: "Help me prepare for a system design interview" },
 ];
 
-export default function GeneralChatPage() {
+function GeneralChatContent() {
   const { data: session } = useSession();
   const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
@@ -190,5 +192,13 @@ export default function GeneralChatPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function GeneralChatPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-[var(--muted)]">Loading...</div>}>
+      <GeneralChatContent />
+    </Suspense>
   );
 }
