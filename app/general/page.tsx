@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useSearchParams } from "next/navigation";
 import { Sparkles, Image as ImageIcon, Code, Zap } from "lucide-react";
 import ChatInterface, { Message } from "@/components/ChatInterface";
-import { sendGeneralChat, saveConversation } from "@/lib/api";
+import { sendGeneralChat, saveConversation, getConversation } from "@/lib/api";
+import { useModulePersistence } from "@/hooks/useModulePersistence";
 
 const SUGGESTIONS = [
   { icon: ImageIcon, text: "Generate an image of a futuristic cyberpunk city" },
@@ -15,9 +17,43 @@ const SUGGESTIONS = [
 
 export default function GeneralChatPage() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const historySessionId = useRef<string | undefined>(undefined);
+
+  const parseMessages = (raw: Array<{ role: string; content: string; id?: string }>): Message[] =>
+    raw.map((m) => ({
+      id: m.id || `${m.role}-${Math.random()}`,
+      role: m.role as "user" | "assistant",
+      content: m.content,
+      timestamp: new Date(),
+    }));
+
+  useModulePersistence({
+    module: "general",
+    state: { messages: messages.map(({ id, role, content }) => ({ id, role, content })), historySessionId: historySessionId.current },
+    onRestore: (saved) => {
+      if (saved.messages?.length) setMessages(parseMessages(saved.messages));
+      if (saved.historySessionId) historySessionId.current = saved.historySessionId;
+    },
+    onMongoRestore: (data) => {
+      setMessages(parseMessages(data.messages));
+      historySessionId.current = data.id;
+    },
+  });
+
+  // Resume from history page link ?resume=<id>
+  useEffect(() => {
+    const resumeId = searchParams.get("resume");
+    if (!resumeId) return;
+    getConversation(resumeId)
+      .then((res) => {
+        setMessages(parseMessages(res.data.messages));
+        historySessionId.current = res.data.id;
+      })
+      .catch(() => {});
+  }, [searchParams]);
 
   const handleSendMessage = async (content: string, file?: File) => {
     const userMessage: Message = {

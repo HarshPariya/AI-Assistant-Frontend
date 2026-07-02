@@ -4,7 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export const api = axios.create({
   baseURL: API_URL,
-  timeout: 120000, // 2 minutes for LLM responses
+  timeout: 60000, // 60s — Groq responses typically under 5s
 });
 
 // ── Health ─────────────────────────────────────────────────────────────────
@@ -100,6 +100,11 @@ export const saveConversation = (data: {
 export const getUserHistory = (user_id: string, module?: string) =>
   api.get(`/history/user/${encodeURIComponent(user_id)}`, {
     params: module ? { module } : undefined,
+  });
+
+export const getLatestConversation = (user_id: string, module: string) =>
+  api.get(`/history/user/${encodeURIComponent(user_id)}/latest`, {
+    params: { module },
   });
 
 export const getConversation = (session_id: string) =>

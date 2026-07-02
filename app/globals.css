@@ -291,19 +291,46 @@ body {
 /* ============================================================
    PROSE (Markdown) OVERRIDES
    ============================================================ */
-.prose { --tw-prose-invert-body: #94a3b8; max-width: none; }
-.prose pre { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
-.prose code { background: rgba(255,255,255,0.06); border-radius: 4px; padding: 0.1em 0.35em; }
+.prose { --tw-prose-invert-body: #94a3b8; max-width: none; font-size: 0.875rem; line-height: 1.6; }
+.prose p, .prose li { font-size: 0.875rem; }
+.prose pre { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); font-size: 0.8125rem; overflow-x: auto; }
+.prose code { background: rgba(255,255,255,0.06); border-radius: 4px; padding: 0.1em 0.35em; font-size: 0.8125rem; word-break: break-word; }
 .prose :where(a):not(:where([class~="not-prose"] *)) { color: #818cf8; }
 
 /* ============================================================
-   RESPONSIVE MOBILE HELPERS
+   RESPONSIVE — mobile, tablet, desktop
    ============================================================ */
-/* Ensure main content has space for the mobile hamburger */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 @media (max-width: 767px) {
   .page-header {
-    padding-left: 3.5rem !important; /* 56px = hamburger button + gap */
+    padding-left: 3.5rem !important;
   }
+
+  /* Minimum readable font sizes on small screens */
+  body {
+    font-size: 14px;
+  }
+
+  .badge {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Safe area for notched phones (iPhone, Android) */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* Prevent horizontal overflow on mobile */
+main {
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Input placeholder styling */

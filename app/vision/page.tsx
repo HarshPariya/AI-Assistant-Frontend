@@ -235,7 +235,7 @@ export default function VisionPage() {
                 placeholder="Ask me anything about this image..."
                 accentColor="from-violet-500 to-purple-500"
                 accentHex="#a78bfa"
-                allowFileUpload={true}
+                allowFileUpload={false}
                 setMessages={setMessages}
               />
             </div>

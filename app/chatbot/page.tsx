@@ -1,15 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MessageSquare, Upload, Trash2 } from "lucide-react";
 import FileUpload from "@/components/FileUpload";
 import ChatInterface, { Message } from "@/components/ChatInterface";
-import { uploadChatPDF, askChatQuestion, saveConversation } from "@/lib/api";
+import { uploadChatPDF, askChatQuestion, saveConversation, getConversation } from "@/lib/api";
 import { useSession } from "next-auth/react";
-import { useRef } from "react";
+import { useSearchParams } from "next/navigation";
+import { useModulePersistence } from "@/hooks/useModulePersistence";
+import { clearModuleState } from "@/lib/moduleState";
 
 export default function ChatbotPage() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
   const historySessionId = useRef<string | undefined>(undefined);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
@@ -18,6 +21,44 @@ export default function ChatbotPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+
+  useModulePersistence({
+    module: "chatbot",
+    state: { sessionId, fileName, chunkCount, messages: messages.map(({ id, role, content, sources }) => ({ id, role, content, sources })), historySessionId: historySessionId.current },
+    enabled: !!sessionId,
+    onRestore: (saved) => {
+      if (saved.sessionId) setSessionId(saved.sessionId);
+      if (saved.fileName) setFileName(saved.fileName);
+      if (saved.chunkCount) setChunkCount(saved.chunkCount);
+      if (saved.messages?.length) {
+        setMessages(saved.messages.map((m) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
+      }
+      if (saved.historySessionId) historySessionId.current = saved.historySessionId;
+    },
+    onMongoRestore: (data) => {
+      historySessionId.current = data.id;
+      setMessages(data.messages.map((m) => ({
+        id: m.id || `${m.role}-${Math.random()}`,
+        role: m.role as "user" | "assistant",
+        content: m.content,
+        timestamp: new Date(),
+      })));
+    },
+  });
+
+  useEffect(() => {
+    const resumeId = searchParams.get("resume");
+    if (!resumeId) return;
+    getConversation(resumeId).then((res) => {
+      historySessionId.current = res.data.id;
+      setMessages(res.data.messages.map((m: { id?: string; role: string; content: string }) => ({
+        id: m.id || `${m.role}-${Math.random()}`,
+        role: m.role as "user" | "assistant",
+        content: m.content,
+        timestamp: new Date(),
+      })));
+    }).catch(() => {});
+  }, [searchParams]);
 
   const handleUpload = async (file: File) => {
     setIsUploading(true);
@@ -103,6 +144,7 @@ export default function ChatbotPage() {
     setFileName("");
     setMessages([]);
     setUploadError("");
+    clearModuleState("chatbot");
   };
 
   return (

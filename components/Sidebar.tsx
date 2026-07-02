@@ -136,8 +136,9 @@ export default function Sidebar() {
         className={`
           fixed md:relative flex flex-col h-screen z-[58]
           transition-transform duration-300 ease-in-out
+          w-[min(280px,88vw)] md:w-auto
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-          ${collapsed ? "w-[68px]" : "w-[240px]"}
+          ${collapsed ? "md:w-[68px]" : "md:w-[240px]"}
         `}
         style={{
           background: "rgba(6,8,16,0.95)",
@@ -180,7 +181,7 @@ export default function Sidebar() {
               <p className="text-sm font-bold leading-tight" style={{ color: "var(--fg)" }}>
                 AI Platform
               </p>
-              <p className="text-[10px] leading-tight" style={{ color: "var(--muted)" }}>
+              <p className="text-xs leading-tight" style={{ color: "var(--muted)" }}>
                 Career &amp; Research
               </p>
             </div>
@@ -191,7 +192,7 @@ export default function Sidebar() {
         <nav className="flex-1 py-4 space-y-0.5 px-3 overflow-y-auto">
           {!collapsed && (
             <div className="mb-3 px-1">
-              <p className="text-[10px] font-bold tracking-[0.2em] text-cyan-400/80 uppercase">
+              <p className="text-xs font-bold tracking-[0.15em] text-cyan-400/80 uppercase">
                 System Modules
               </p>
             </div>
@@ -237,7 +238,7 @@ export default function Sidebar() {
                   {!collapsed && (
                     <div className="flex-1 min-w-0">
                       <p
-                        className="text-[11px] font-semibold leading-tight truncate transition-colors uppercase tracking-wider"
+                        className="text-xs font-semibold leading-tight truncate transition-colors uppercase tracking-wide"
                         style={{
                           color: isActive ? "var(--fg)" : "var(--muted)",
                           textShadow: isActive ? `0 0 8px ${accent}60` : "none",
@@ -271,7 +272,7 @@ export default function Sidebar() {
           <div className="px-4 py-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#34d399" }} />
-              <p className="text-[0.65rem]" style={{ color: "var(--faint)" }}>
+              <p className="text-xs" style={{ color: "var(--faint)" }}>
                 Groq + LangChain
               </p>
             </div>

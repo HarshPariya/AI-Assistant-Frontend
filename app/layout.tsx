@@ -19,6 +19,13 @@ export const metadata: Metadata = {
   keywords: "AI, career, resume, interview, RAG, GenAI, Groq, research",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover" as const,
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
@@ -55,7 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <div className="relative z-10 flex h-screen overflow-hidden">
             <Sidebar />
-            <main className="flex-1 overflow-y-auto min-w-0">
+            <main className="flex-1 overflow-y-auto min-w-0 safe-bottom">
               {children}
             </main>
           </div>

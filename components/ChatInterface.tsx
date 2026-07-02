@@ -272,8 +272,8 @@ export default function ChatInterface({
         <div ref={bottomRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="px-4 md:px-5 py-4 relative z-10" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "var(--bg)" }}>
+      {/* Input Area — sticky on mobile with safe area */}
+      <div className="px-4 md:px-5 py-3 md:py-4 relative z-10 sticky bottom-0 safe-bottom" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "var(--bg)" }}>
         {/* File preview pill above input */}
         {selectedFile && (
           <div className="absolute -top-14 left-4 animate-slide-up flex items-center gap-2 px-3 py-2 rounded-xl shadow-xl"
@@ -366,7 +366,7 @@ export default function ChatInterface({
             </button>
           </div>
         </div>
-        <p className="text-[10px] text-center mt-2" style={{ color: "var(--faint)" }}>
+        <p className="text-xs text-center mt-2" style={{ color: "var(--faint)" }}>
           Enter to send · Shift+Enter for new line
         </p>
       </div>
