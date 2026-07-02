@@ -38,23 +38,30 @@ export default function UserMenu({ collapsed = false }: UserMenuProps) {
       <div className="px-3 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
         <button
           onClick={() => signIn("google")}
-          className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg transition-all duration-200 group ${collapsed ? "justify-center" : ""}`}
+          className={`relative w-full flex items-center gap-2.5 px-3 py-3 rounded-lg overflow-hidden transition-all duration-300 group ${collapsed ? "justify-center" : ""}`}
           style={{
-            background: "rgba(34,211,238,0.06)",
-            border: "1px solid rgba(34,211,238,0.2)",
+            background: "linear-gradient(135deg, rgba(34,211,238,0.1), rgba(99,102,241,0.1))",
+            border: "1px solid rgba(34,211,238,0.3)",
+            boxShadow: "0 4px 15px rgba(34,211,238,0.1)",
           }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,211,238,0.12)";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 15px rgba(34,211,238,0.15)";
+            (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(34,211,238,0.2), rgba(99,102,241,0.2))";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(34,211,238,0.25)";
+            (e.currentTarget as HTMLButtonElement).style.transform = "translateY(-1px)";
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,211,238,0.06)";
-            (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+            (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, rgba(34,211,238,0.1), rgba(99,102,241,0.1))";
+            (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 15px rgba(34,211,238,0.1)";
+            (e.currentTarget as HTMLButtonElement).style.transform = "translateY(0)";
           }}
           title="Sign in with Google"
         >
-          <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-4 h-4">
+          {/* Subtle animated border glow */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" 
+               style={{ background: "radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%)" }} />
+               
+          <div className="relative z-10 flex-shrink-0 w-5 h-5 flex items-center justify-center bg-white rounded-full p-[3px]">
+            <svg viewBox="0 0 24 24" className="w-full h-full">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
@@ -62,7 +69,7 @@ export default function UserMenu({ collapsed = false }: UserMenuProps) {
             </svg>
           </div>
           {!collapsed && (
-            <span className="text-[11px] font-bold tracking-wider uppercase text-cyan-400">
+            <span className="relative z-10 text-[12px] font-bold tracking-wider uppercase text-cyan-50 drop-shadow-md">
               Sign in with Google
             </span>
           )}

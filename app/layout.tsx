@@ -60,7 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
         {/* App Shell */}
         <AuthProvider>
-          <div className="relative z-10 flex h-screen overflow-hidden">
+          <div className="relative z-10 flex h-[100dvh] overflow-hidden">
             <Sidebar />
             <main className="flex-1 overflow-y-auto min-w-0 safe-bottom">
               {children}

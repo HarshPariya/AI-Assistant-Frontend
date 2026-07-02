@@ -134,17 +134,17 @@ export default function Sidebar() {
       {/* Sidebar panel */}
       <aside
         className={`
-          fixed md:relative flex flex-col h-screen z-[58]
+          fixed md:relative flex flex-col h-[100dvh] z-[58]
           transition-transform duration-300 ease-in-out
           w-[min(280px,88vw)] md:w-auto
           ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
           ${collapsed ? "md:w-[68px]" : "md:w-[240px]"}
         `}
         style={{
-          background: "rgba(6,8,16,0.95)",
-          borderRight: "1px solid rgba(255,255,255,0.06)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          background: "rgba(6,8,16,0.85)",
+          borderRight: "1px solid rgba(255,255,255,0.08)",
+          backdropFilter: "blur(24px)",
+          WebkitBackdropFilter: "blur(24px)",
           flexShrink: 0,
         }}
       >
@@ -189,7 +189,7 @@ export default function Sidebar() {
         </Link>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 space-y-0.5 px-3 overflow-y-auto">
+        <nav className="flex-1 min-h-0 py-4 space-y-1 px-3 overflow-y-auto custom-scrollbar">
           {!collapsed && (
             <div className="mb-3 px-1">
               <p className="text-xs font-bold tracking-[0.15em] text-cyan-400/80 uppercase">
