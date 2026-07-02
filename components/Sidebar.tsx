@@ -274,6 +274,7 @@ export default function Sidebar() {
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#34d399" }} />
               <p className="text-xs" style={{ color: "var(--faint)" }}>
                Powered by Groq
+               
               </p>
             </div>
           </div>

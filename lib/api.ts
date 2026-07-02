@@ -114,3 +114,12 @@ export const getConversation = (session_id: string) =>
 
 export const deleteConversation = (session_id: string, user_id: string) =>
   api.delete(`/history/session/${session_id}`, { params: { user_id } });
+
+// ── Voice ──────────────────────────────────────────────────────────────────
+export const transcribeAudio = (file: Blob, filename: string = "audio.webm") => {
+  const form = new FormData();
+  form.append("file", file, filename);
+  return api.post("/voice/transcribe", form, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};

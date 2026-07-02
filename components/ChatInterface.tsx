@@ -7,9 +7,12 @@ import {
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
+import AudioRecorder from "./AudioRecorder";
+import { transcribeAudio } from "@/lib/api";
+
 export interface Message {
   id: string;
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "tool";
   content: string;
   sources?: Array<{ page: number; score: number }>;
   timestamp: Date;
@@ -86,6 +89,18 @@ export default function ChatInterface({
       setInput(msg.content);
       if (msg.file) setSelectedFile(msg.file);
       if (setMessages) setMessages((prev) => prev.slice(0, index));
+    }
+  };
+
+  const handleAudioRecording = async (blob: Blob) => {
+    try {
+      const res = await transcribeAudio(blob);
+      if (res.data?.text) {
+        setInput(res.data.text);
+      }
+    } catch (e) {
+      console.error("Audio transcription failed", e);
+      alert("Failed to transcribe audio.");
     }
   };
 
@@ -361,23 +376,26 @@ export default function ChatInterface({
               )}
             </div>
 
-            <button
-              onClick={handleSend}
-              disabled={(!input.trim() && !selectedFile) || isLoading}
-              className="w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200"
-              style={{
-                background: (!input.trim() && !selectedFile) || isLoading
-                  ? "rgba(255,255,255,0.05)"
-                  : `linear-gradient(135deg, ${accentHex}, ${accentHex}99)`,
-                opacity: (!input.trim() && !selectedFile) || isLoading ? 0.5 : 1,
-                cursor: (!input.trim() && !selectedFile) || isLoading ? "not-allowed" : "pointer",
-                boxShadow: (!input.trim() && !selectedFile) || isLoading ? "none" : `0 0 10px ${accentHex}66`
-              }}
-            >
-              {isLoading
-                ? <Loader2 size={14} className="text-white animate-spin" />
-                : <Send size={14} className="text-white" />}
-            </button>
+            <div className="flex items-center gap-1">
+              <AudioRecorder onRecordingComplete={handleAudioRecording} disabled={isLoading} />
+              <button
+                onClick={handleSend}
+                disabled={(!input.trim() && !selectedFile) || isLoading}
+                className="w-8 h-8 rounded-md flex items-center justify-center transition-all duration-200"
+                style={{
+                  background: (!input.trim() && !selectedFile) || isLoading
+                    ? "rgba(255,255,255,0.05)"
+                    : `linear-gradient(135deg, ${accentHex}, ${accentHex}99)`,
+                  opacity: (!input.trim() && !selectedFile) || isLoading ? 0.5 : 1,
+                  cursor: (!input.trim() && !selectedFile) || isLoading ? "not-allowed" : "pointer",
+                  boxShadow: (!input.trim() && !selectedFile) || isLoading ? "none" : `0 0 10px ${accentHex}66`
+                }}
+              >
+                {isLoading
+                  ? <Loader2 size={14} className="text-white animate-spin" />
+                  : <Send size={14} className="text-white" />}
+              </button>
+            </div>
           </div>
         </div>
         <p className="text-xs text-center mt-2" style={{ color: "var(--faint)" }}>
