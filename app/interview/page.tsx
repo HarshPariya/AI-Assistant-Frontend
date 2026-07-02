@@ -57,8 +57,24 @@ function InterviewContent() {
     },
     onMongoRestore: (data) => {
       historySessionId.current = data.id;
+      
+      // Handle restoring question generation
+      if (data.title && data.title.startsWith("Interview Questions:")) {
+        const assistantMsg = data.messages?.find((m: any) => m.role === "assistant");
+        if (assistantMsg) {
+          try {
+            const parsedQuestions = JSON.parse(assistantMsg.content);
+            setQuestions(parsedQuestions);
+            setMockMode(false);
+            return;
+          } catch (e) {
+            // Fallback if not JSON
+          }
+        }
+      }
+
       if (data.messages?.length) {
-        setMessages(data.messages.map((m) => ({
+        setMessages(data.messages.map((m: any) => ({
           id: m.id || `${m.role}-${Math.random()}`,
           role: m.role as "user" | "assistant",
           content: m.content,
@@ -74,6 +90,22 @@ function InterviewContent() {
     if (!resumeId) return;
     getConversation(resumeId).then((res) => {
       historySessionId.current = res.data.id;
+
+      // Handle restoring question generation
+      if (res.data.title && res.data.title.startsWith("Interview Questions:")) {
+        const assistantMsg = res.data.messages?.find((m: any) => m.role === "assistant");
+        if (assistantMsg) {
+          try {
+            const parsedQuestions = JSON.parse(assistantMsg.content);
+            setQuestions(parsedQuestions);
+            setMockMode(false);
+            return;
+          } catch (e) {
+            // Fallback if not JSON
+          }
+        }
+      }
+
       setMockMode(true);
       setMessages(res.data.messages.map((m: { id?: string; role: string; content: string }) => ({
         id: m.id || `${m.role}-${Math.random()}`,
@@ -106,16 +138,13 @@ function InterviewContent() {
 
       if (session?.user?.email) {
         try {
-          const summary = res.data.questions
-            .map((q: Question, i: number) => `${i + 1}. ${q.question}`)
-            .join("\n");
           const saveRes = await saveConversation({
             user_id: session.user.email,
             module: "interview",
             title: `Interview Questions: ${selectedRole}`,
             messages: [
               { role: "user", content: `Generate ${res.data.total} questions for ${selectedRole} (${experienceLevel})`, id: "gen-req" },
-              { role: "assistant", content: summary, id: "gen-res" },
+              { role: "assistant", content: JSON.stringify(res.data.questions), id: "gen-res" },
             ],
             session_id: historySessionId.current,
           });
