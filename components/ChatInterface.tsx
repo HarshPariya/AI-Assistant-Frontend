@@ -377,7 +377,11 @@ export default function ChatInterface({
             </div>
 
             <div className="flex items-center gap-1">
-              <AudioRecorder onRecordingComplete={handleAudioRecording} disabled={isLoading} />
+              <AudioRecorder 
+                onRecordingComplete={handleAudioRecording} 
+                onLiveTranscript={(text) => setInput(text)}
+                disabled={isLoading} 
+              />
               <button
                 onClick={handleSend}
                 disabled={(!input.trim() && !selectedFile) || isLoading}

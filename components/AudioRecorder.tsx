@@ -1,15 +1,26 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Mic, Square } from 'lucide-react';
 
 interface AudioRecorderProps {
   onRecordingComplete: (blob: Blob) => void;
+  onLiveTranscript?: (text: string) => void;
   disabled?: boolean;
 }
 
-export default function AudioRecorder({ onRecordingComplete, disabled }: AudioRecorderProps) {
+export default function AudioRecorder({ onRecordingComplete, onLiveTranscript, disabled }: AudioRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    // Cleanup on unmount
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -32,6 +43,28 @@ export default function AudioRecorder({ onRecordingComplete, disabled }: AudioRe
 
       mediaRecorder.start();
       setIsRecording(true);
+
+      // Attempt to start Web Speech API for live transcription
+      if (onLiveTranscript) {
+        const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (SpeechRecognition) {
+          const recognition = new SpeechRecognition();
+          recognition.continuous = true;
+          recognition.interimResults = true;
+          
+          recognition.onresult = (event: any) => {
+            let transcript = "";
+            for (let i = 0; i < event.results.length; i++) {
+              transcript += event.results[i][0].transcript;
+            }
+            onLiveTranscript(transcript);
+          };
+
+          recognition.start();
+          recognitionRef.current = recognition;
+        }
+      }
+
     } catch (error) {
       console.error("Error accessing microphone:", error);
       alert("Microphone access is required to use Voice AI.");
@@ -42,6 +75,10 @@ export default function AudioRecorder({ onRecordingComplete, disabled }: AudioRe
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
   };
 
