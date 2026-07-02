@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Mic, ChevronDown, Play, RotateCcw, Star, CheckCircle, MessageSquare, Lightbulb } from "lucide-react";
-import { getRoles, generateQuestions, evaluateMockAnswer, saveConversation } from "@/lib/api";
+import { getRoles, generateQuestions, evaluateMockAnswer, saveConversation, getConversation } from "@/lib/api";
 import ChatInterface, { Message } from "@/components/ChatInterface";
 import { useSession } from "next-auth/react";
-import { useRef } from "react";
+import { useModulePersistence } from "@/hooks/useModulePersistence";
+import { clearModuleState } from "@/lib/moduleState";
 
 interface Question {
   id: number;
@@ -19,6 +21,7 @@ interface Question {
 
 export default function InterviewPage() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
   const historySessionId = useRef<string | undefined>(undefined);
   const [roles, setRoles] = useState<string[]>([]);
   const [selectedRole, setSelectedRole] = useState("AI/ML Engineer");
@@ -34,6 +37,38 @@ export default function InterviewPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [mockLoading, setMockLoading] = useState(false);
   const [conversationHistory, setConversationHistory] = useState<any[]>([]);
+
+  useModulePersistence({
+    module: "interview",
+    state: { mockMode, selectedRole, experienceLevel, questions, messages: messages.map(({ id, role, content }) => ({ id, role, content })), currentQIdx, historySessionId: historySessionId.current },
+    enabled: mockMode || questions.length > 0,
+    onRestore: (saved) => {
+      if (saved.selectedRole) setSelectedRole(saved.selectedRole);
+      if (saved.experienceLevel) setExperienceLevel(saved.experienceLevel);
+      if (saved.questions?.length) setQuestions(saved.questions);
+      if (saved.mockMode) setMockMode(saved.mockMode);
+      if (saved.currentQIdx !== undefined) setCurrentQIdx(saved.currentQIdx);
+      if (saved.messages?.length) {
+        setMessages(saved.messages.map((m) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
+      }
+      if (saved.historySessionId) historySessionId.current = saved.historySessionId;
+    },
+  });
+
+  useEffect(() => {
+    const resumeId = searchParams.get("resume");
+    if (!resumeId) return;
+    getConversation(resumeId).then((res) => {
+      historySessionId.current = res.data.id;
+      setMockMode(true);
+      setMessages(res.data.messages.map((m: { id?: string; role: string; content: string }) => ({
+        id: m.id || `${m.role}-${Math.random()}`,
+        role: m.role as "user" | "assistant",
+        content: m.content,
+        timestamp: new Date(),
+      })));
+    }).catch(() => {});
+  }, [searchParams]);
 
   useEffect(() => {
     getRoles()
