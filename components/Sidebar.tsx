@@ -112,7 +112,7 @@ export default function Sidebar() {
       {/* Mobile hamburger button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-[60] w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+        className={`md:hidden fixed top-4 left-4 z-[60] w-9 h-9 rounded-xl items-center justify-center transition-all ${mobileOpen ? "hidden" : "flex"}`}
         style={{
           background: "rgba(255,255,255,0.06)",
           border: "1px solid rgba(255,255,255,0.1)",
