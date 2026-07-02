@@ -273,7 +273,7 @@ export default function Sidebar() {
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#34d399" }} />
               <p className="text-xs" style={{ color: "var(--faint)" }}>
-                Groq + LangChain
+               Powered by Groq
               </p>
             </div>
           </div>
