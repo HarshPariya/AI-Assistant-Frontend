@@ -146,18 +146,18 @@ export default function HistoryPage() {
                         {summary.message_count} msgs
                       </div>
                     </div>
-                    <h3 className="text-sm md:text-base text-white font-medium truncate pr-10">{summary.title}</h3>
+                    <h3 className="text-sm md:text-base text-white font-medium truncate pr-4">{summary.title}</h3>
                   </div>
-
-                  <ChevronRight size={16} className="text-white/30 group-hover:text-cyan-400 transition-colors flex-shrink-0" />
 
                   <button
                     onClick={(e) => handleDelete(summary.id, e)}
                     disabled={deletingId === summary.id}
-                    className="absolute right-10 top-1/2 -translate-y-1/2 p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover:opacity-100"
+                    className="p-2 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all md:opacity-0 md:group-hover:opacity-100 flex-shrink-0"
                   >
                     {deletingId === summary.id ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                   </button>
+
+                  <ChevronRight size={16} className="text-white/30 group-hover:text-cyan-400 transition-colors flex-shrink-0 ml-2" />
                 </Link>
               ))}
             </div>

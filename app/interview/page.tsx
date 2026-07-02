@@ -46,7 +46,7 @@ function InterviewContent() {
     enabled: mockMode || questions.length > 0,
     onRestore: (saved) => {
       // If local storage has a broken state where a question generation was cached as a mock interview
-      if (saved.mockMode && saved.messages?.some((m: any) => m.id === "gen-req")) {
+      if (saved.mockMode && saved.messages?.some((m: { role: string; content: string; id?: string }) => m.id === "gen-req")) {
         clearModuleState("interview");
         setMockMode(false);
         setMessages([]);
@@ -60,16 +60,16 @@ function InterviewContent() {
       if (saved.mockMode) setMockMode(saved.mockMode);
       if (saved.currentQIdx !== undefined) setCurrentQIdx(saved.currentQIdx);
       if (saved.messages?.length) {
-        setMessages(saved.messages.map((m: any) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
+        setMessages(saved.messages.map((m: { role: string; content: string; id?: string }) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
       }
       if (saved.historySessionId) historySessionId.current = saved.historySessionId;
     },
     onMongoRestore: (data) => {
       historySessionId.current = data.id;
-      
+
       // Handle restoring question generation
       if (data.title && data.title.startsWith("Interview Questions:")) {
-        const assistantMsg = data.messages?.find((m: any) => m.role === "assistant");
+        const assistantMsg = data.messages?.find((m: { role: string; content: string; id?: string }) => m.role === "assistant");
         if (assistantMsg) {
           try {
             const parsedQuestions = JSON.parse(assistantMsg.content);
@@ -83,7 +83,7 @@ function InterviewContent() {
       }
 
       if (data.messages?.length) {
-        setMessages(data.messages.map((m: any) => ({
+        setMessages(data.messages.map((m: { role: string; content: string; id?: string }) => ({
           id: m.id || `${m.role}-${Math.random()}`,
           role: m.role as "user" | "assistant",
           content: m.content,
@@ -122,13 +122,13 @@ function InterviewContent() {
         content: m.content,
         timestamp: new Date(),
       })));
-    }).catch(() => {});
+    }).catch(() => { });
   }, [searchParams]);
 
   useEffect(() => {
     getRoles()
       .then((r) => setRoles(r.data.roles))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const generateQs = async () => {
@@ -223,7 +223,7 @@ function InterviewContent() {
       }
 
       const assistantMsg = { id: `ai-${currentQIdx}`, role: "assistant" as const, content: responseContent, timestamp: new Date() };
-      
+
       const allMsgs = [...messages, userMessage, assistantMsg];
 
       setConversationHistory((prev) => [...prev, { question: currentQ.question, answer: userAnswer }]);
@@ -256,8 +256,8 @@ function InterviewContent() {
 
   const difficultyColor = (d: string) =>
     d === "Easy" ? "text-green-400 bg-green-500/10 border-green-500/20" :
-    d === "Medium" ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/20" :
-    "text-red-400 bg-red-500/10 border-red-500/20";
+      d === "Medium" ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/20" :
+        "text-red-400 bg-red-500/10 border-red-500/20";
 
   return (
     <div className="min-h-screen p-5 md:p-8 pt-4">
@@ -394,14 +394,14 @@ function InterviewContent() {
                       </span>
                       <span className="text-xs text-gray-600">⏱ {q.expected_time}</span>
                     </div>
-                    
-                    <button 
-                      onClick={() => setExpandedAnswers(prev => ({...prev, [q.id]: !prev[q.id]}))}
+
+                    <button
+                      onClick={() => setExpandedAnswers(prev => ({ ...prev, [q.id]: !prev[q.id] }))}
                       className="text-xs font-medium text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1"
                     >
                       {expandedAnswers[q.id] ? "Hide Answer" : "Show Answer"}
                     </button>
-                    
+
                     {expandedAnswers[q.id] && q.model_answer && (
                       <div className="mt-3 p-3 bg-gray-900/50 rounded-lg border border-white/5 animate-fade-in text-sm text-gray-300 whitespace-pre-wrap">
                         <strong className="text-white block mb-1 text-xs uppercase tracking-wider">Model Answer:</strong>

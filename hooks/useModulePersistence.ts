@@ -12,6 +12,7 @@ interface UseModulePersistenceOptions<T> {
   onRestore?: (saved: T) => void;
   onMongoRestore?: (data: {
     id: string;
+    title?: string;
     messages: Array<{ role: string; content: string; id?: string }>;
   }) => void;
 }
