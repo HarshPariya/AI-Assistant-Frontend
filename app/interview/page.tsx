@@ -60,7 +60,12 @@ function InterviewContent() {
       if (saved.mockMode) setMockMode(saved.mockMode);
       if (saved.currentQIdx !== undefined) setCurrentQIdx(saved.currentQIdx);
       if (saved.messages?.length) {
-        setMessages(saved.messages.map((m: { role: string; content: string; id?: string }) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
+        setMessages(saved.messages.map((m: { role: string; content: string; id?: string }) => ({ 
+          ...m, 
+          id: m.id || `msg-${Math.random()}`,
+          role: m.role as "user" | "assistant", 
+          timestamp: new Date() 
+        })));
       }
       if (saved.historySessionId) historySessionId.current = saved.historySessionId;
     },
