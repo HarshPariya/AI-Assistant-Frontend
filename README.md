@@ -6,6 +6,13 @@ A stunning, responsive, and highly interactive frontend for the AI Career & Rese
 **Live Backend API URL:** [https://ai-assistant-backend-01.onrender.com](https://ai-assistant-backend-01.onrender.com)
 
 ---
+---
+
+## 🔗 Repository Links
+- **Frontend Repository:** [https://github.com/HarshPariya/AI-Assistant-Frontend](https://github.com/HarshPariya/AI-Assistant-Frontend)
+- **Backend Repository:** [https://github.com/HarshPariya/AI-Assistant-Backend](https://github.com/HarshPariya/AI-Assistant-Backend)
+
+---
 
 ## 🏗️ How It Was Built & Technology Breakdown
 
@@ -20,18 +27,20 @@ Every single line of this frontend was custom-written to ensure a beautiful, fla
 
 *Note on AI Integrations: This frontend connects to a custom Python backend powered directly by Groq. **We DO NOT use LangChain** anywhere in this stack; we chose a pure, custom-built approach for maximum speed and lower overhead.*
 
----
+
 
 ## 🚀 Key Modules
 
 1. **App Hub / Dashboard:** The central nervous system of the platform.
 2. **General AI Chat:** A multimodal ChatGPT-like interface that streams responses beautifully.
-3. **Resume Reviewer:** A drag-and-drop file upload zone that parses resumes and displays a detailed ATS breakdown.
-4. **Interview Assistant:** Interactive form to select Job Roles and Experience Levels, followed by a simulated Q&A flow.
-5. **PDF Chatbot (Custom RAG):** Upload PDFs and converse directly with the document content.
-6. **Research Assistant:** Upload multiple PDFs, perform unified research analysis, and visualize data.
-7. **Image Q&A:** A Vision AI interface where users can upload an image and ask contextual questions.
-8. **Chat History:** Seamlessly integrated MongoDB history view that persists past conversations across sessions.
+3. **Web Search (Agentic AI):** Real-time web search capabilities giving the AI the ability to search Google for up-to-date information.
+4. **Voice AI (Speech-to-Text):** Integrated OpenAI Whisper for seamless speech-to-text dictation, allowing users to speak their answers instead of typing them.
+5. **Resume Reviewer:** A drag-and-drop file upload zone that parses resumes and displays a detailed ATS breakdown.
+6. **Interview Assistant:** Interactive mock interviews with Voice AI support to practice answering questions out loud.
+7. **PDF Chatbot (Custom RAG):** Upload PDFs and converse directly with the document content.
+8. **Research Assistant:** Upload multiple PDFs, perform unified research analysis, and visualize data.
+9. **Image Q&A:** A Vision AI interface where users can upload an image and ask contextual questions.
+10. **Chat History:** Seamlessly integrated MongoDB history view that persists past conversations across sessions.
 
 ---
 
