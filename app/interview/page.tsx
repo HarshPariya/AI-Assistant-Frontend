@@ -45,13 +45,22 @@ function InterviewContent() {
     state: { mockMode, selectedRole, experienceLevel, questions, messages: messages.map(({ id, role, content }) => ({ id, role, content })), currentQIdx, historySessionId: historySessionId.current },
     enabled: mockMode || questions.length > 0,
     onRestore: (saved) => {
+      // If local storage has a broken state where a question generation was cached as a mock interview
+      if (saved.mockMode && saved.messages?.some((m: any) => m.id === "gen-req")) {
+        clearModuleState("interview");
+        setMockMode(false);
+        setMessages([]);
+        setQuestions([]);
+        return;
+      }
+
       if (saved.selectedRole) setSelectedRole(saved.selectedRole);
       if (saved.experienceLevel) setExperienceLevel(saved.experienceLevel);
       if (saved.questions?.length) setQuestions(saved.questions);
       if (saved.mockMode) setMockMode(saved.mockMode);
       if (saved.currentQIdx !== undefined) setCurrentQIdx(saved.currentQIdx);
       if (saved.messages?.length) {
-        setMessages(saved.messages.map((m) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
+        setMessages(saved.messages.map((m: any) => ({ ...m, role: m.role as "user" | "assistant", timestamp: new Date() })));
       }
       if (saved.historySessionId) historySessionId.current = saved.historySessionId;
     },
