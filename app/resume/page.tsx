@@ -113,7 +113,7 @@ export default function ResumePage() {
   };
 
   return (
-    <div className="min-h-screen p-5 md:p-8 pt-4">
+    <div className="min-h-[100dvh] p-5 md:p-8 pt-4">
       {/* Header */}
       <div className="mb-7 animate-fade-in pl-16 md:pl-0">
         <div className="flex items-center gap-3">

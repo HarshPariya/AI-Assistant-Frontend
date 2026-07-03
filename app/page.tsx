@@ -14,7 +14,7 @@ const stats = [
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen w-full">
+    <div className="min-h-[100dvh] w-full">
       {/* ── Header ─────────────────────────────────────── */}
       <header
         className="sticky top-0 z-20 flex items-center gap-4 px-5 md:px-8 py-4 pl-16 md:pl-8"

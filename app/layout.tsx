@@ -19,11 +19,13 @@ export const metadata: Metadata = {
   keywords: "AI, career, resume, interview, RAG, GenAI, Groq, research",
 };
 
-export const viewport = {
+export const viewport: import("next").Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5,
-  viewportFit: "cover" as const,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

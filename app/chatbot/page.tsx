@@ -153,7 +153,7 @@ function ChatbotContent() {
   };
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-[100dvh]">
       {/* Header */}
       <div className="px-5 md:px-6 py-4 pl-16 md:pl-6 flex items-center justify-between sticky top-0 z-20"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,16,0.8)", backdropFilter: "blur(16px)" }}>

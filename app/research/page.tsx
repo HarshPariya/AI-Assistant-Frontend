@@ -109,7 +109,7 @@ export default function ResearchPage() {
   };
 
   return (
-    <div className="min-h-screen p-5 md:p-8 pt-4">
+    <div className="min-h-[100dvh] p-5 md:p-8 pt-4">
       {/* Header */}
       <div className="mb-7 animate-fade-in flex items-center justify-between pl-16 md:pl-0">
         <div className="flex items-center gap-3">
@@ -216,7 +216,7 @@ export default function ResearchPage() {
                   onChange={(e) => setCustomQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && customQuery && runAction("ask")}
                   placeholder="Ask a question about the documents..."
-                  className="w-full bg-gray-800/80 border border-white/10 text-white text-sm rounded-xl px-3 py-2 outline-none focus:border-violet-500/50 transition-colors placeholder-gray-500"
+                  className="w-full bg-gray-800/80 border border-white/10 text-[16px] md:text-sm text-white rounded-xl px-3 py-2 outline-none focus:border-violet-500/50 transition-colors placeholder-gray-500"
                 />
                 <button
                   onClick={() => customQuery && runAction("ask")}

@@ -71,7 +71,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full relative">
+    <div className="flex flex-col min-h-[100dvh] w-full relative">
       <div
         className="px-4 md:px-6 py-4 pl-16 md:pl-6 flex items-center justify-between sticky top-0 z-20"
         style={{ borderBottom: "1px solid rgba(255,255,255,0.06)", background: "rgba(6,8,16,0.8)", backdropFilter: "blur(16px)" }}

@@ -265,7 +265,7 @@ function InterviewContent() {
         "text-red-400 bg-red-500/10 border-red-500/20";
 
   return (
-    <div className="min-h-screen p-5 md:p-8 pt-4">
+    <div className="min-h-[100dvh] p-5 md:p-8 pt-4">
       {/* Header */}
       <div className="mb-7 animate-fade-in flex items-center gap-3 pl-16 md:pl-0">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center"

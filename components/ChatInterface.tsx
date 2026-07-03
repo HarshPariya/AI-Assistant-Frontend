@@ -346,7 +346,7 @@ export default function ChatInterface({
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
             rows={1}
-            className="w-full bg-transparent text-sm resize-none outline-none max-h-40 leading-relaxed py-1 placeholder-opacity-70"
+            className="w-full bg-transparent text-[16px] md:text-sm resize-none outline-none max-h-40 leading-relaxed py-1 placeholder-opacity-70"
             style={{ color: "var(--fg)" }}
           />
 
