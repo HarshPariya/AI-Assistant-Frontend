@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import AuthProvider from "@/components/AuthProvider";
+import AppIntroWrapper from "@/components/AppIntroWrapper";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -61,6 +62,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
 
         {/* App Shell */}
+        <AppIntroWrapper />
         <AuthProvider>
           <div className="relative z-10 flex h-[100dvh] overflow-hidden">
             <Sidebar />
