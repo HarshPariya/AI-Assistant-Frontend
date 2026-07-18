@@ -110,7 +110,7 @@ function ChatbotContent() {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       
-      const response = await fetch(`${API_URL}/chatbot/stream`, {
+      const response = await fetch(`${API_URL}/chat/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
