@@ -63,12 +63,45 @@ export default function ResearchPage() {
     setActionError("");
     setIsActing(true);
     try {
-      const res = await performResearchAction({
-        session_id: sessionId,
-        action: actionId,
-        query: actionId === "ask" ? customQuery : undefined,
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      const response = await fetch(`${API_URL}/research/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          action: actionId,
+          query: actionId === "ask" ? customQuery : undefined,
+        }),
       });
-      setResult(res.data.result);
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+      
+      setIsActing(false);
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let assistantContent = "";
+
+      while (reader && !done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunkValue = decoder.decode(value, { stream: true });
+          assistantContent += chunkValue;
+          
+          if (assistantContent.includes("__METADATA__::")) {
+            const parts = assistantContent.split("__METADATA__::");
+            assistantContent = parts[0];
+          }
+          setResult(assistantContent);
+        }
+      }
       
       if (session?.user?.email) {
         try {
@@ -77,7 +110,7 @@ export default function ResearchPage() {
           const newMessages = [
             ...historyMessages.current,
             { role: "user", content: userContent, id: `user-${Date.now()}` },
-            { role: "assistant", content: res.data.result, id: `ai-${Date.now()}` },
+            { role: "assistant", content: assistantContent, id: `ai-${Date.now()}` },
           ];
           historyMessages.current = newMessages;
           const saveRes = await saveConversation({
@@ -93,7 +126,7 @@ export default function ResearchPage() {
         }
       }
     } catch (e: any) {
-      setActionError(e.response?.data?.detail || "Action failed.");
+      setActionError(e.message || "Action failed.");
     } finally {
       setIsActing(false);
     }

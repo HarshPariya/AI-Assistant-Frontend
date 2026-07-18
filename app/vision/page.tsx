@@ -87,30 +87,70 @@ export default function VisionPage() {
 
     setIsChatLoading(true);
     try {
-      const res = await askAboutImage(analysis.session_id, question);
-      const assistantMessage = { id: `ai-${Date.now()}`, role: "assistant" as const, content: res.data.answer, timestamp: new Date() };
-      const allMsgs = [...messages, userMessage, assistantMessage];
-      setMessages(() => allMsgs);
+      const aiMessageId = `ai-${Date.now()}`;
+      const initialAiMessage = { id: aiMessageId, role: "assistant" as const, content: "", timestamp: new Date() };
+      setMessages((prev) => [...prev, initialAiMessage]);
 
-      if (session?.user?.email) {
-        try {
-          const saveRes = await saveConversation({
-            user_id: session.user.email,
-            module: "vision",
-            title: `Image Analysis`,
-            messages: allMsgs.map(m => ({ role: m.role, content: m.content, id: m.id })),
-            session_id: historySessionId.current,
-          });
-          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
-        } catch (e) {
-          console.warn("History save failed:", e);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${API_URL}/vision/stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: analysis.session_id,
+          question: question,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      setIsChatLoading(false);
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let assistantContent = "";
+
+      while (reader && !done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunkValue = decoder.decode(value, { stream: true });
+          assistantContent += chunkValue;
+          
+          if (assistantContent.includes("__METADATA__::")) {
+            const parts = assistantContent.split("__METADATA__::");
+            assistantContent = parts[0];
+          }
+          
+          setMessages((prev) => prev.map(m => 
+            m.id === aiMessageId ? { ...m, content: assistantContent } : m
+          ));
         }
       }
+
+      setMessages((prev) => {
+        if (session?.user?.email) {
+          saveConversation({
+            user_id: session!.user!.email as string,
+            module: "vision",
+            title: `Image Analysis`,
+            messages: prev.map(m => ({ role: m.role, content: m.content, id: m.id })),
+            session_id: historySessionId.current,
+          })
+            .then((saveRes) => {
+              if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+            })
+            .catch((e) => console.warn("History save failed:", e));
+        }
+        return prev;
+      });
+
     } catch (e: any) {
-      setMessages((prev) => [
-        ...prev,
-        { id: `err-${Date.now()}`, role: "assistant", content: "❌ Failed to answer. Please try again.", timestamp: new Date() },
-      ]);
+      setMessages((prev) => prev.map(m => 
+        m.role === "assistant" && !m.content ? { ...m, content: `❌ ${e.message || "Failed to answer. Please try again."}` } : m
+      ));
     } finally {
       setIsChatLoading(false);
     }

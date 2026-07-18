@@ -95,29 +95,79 @@ function ChatbotContent() {
       content: message,
       timestamp: new Date(),
     };
-    setMessages((prev) => [...prev, userMessage]);
+    
+    const aiMessageId = `ai-${Date.now()}`;
+    const initialAiMessage: Message = {
+      id: aiMessageId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    };
+    
+    setMessages((prev) => [...prev, userMessage, initialAiMessage]);
     setIsChatLoading(true);
 
     try {
-      const res = await askChatQuestion(sessionId, message);
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      const response = await fetch(`${API_URL}/chatbot/stream`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          session_id: sessionId,
+          message: message,
+        }),
+      });
 
-      const assistantMessage: Message = {
-        id: `ai-${Date.now()}`,
-        role: "assistant",
-        content: res.data.answer,
-        sources: res.data.sources,
-        timestamp: new Date(),
-      };
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      setIsChatLoading(false);
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let assistantContent = "";
+
+      while (reader && !done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunkValue = decoder.decode(value, { stream: true });
+          assistantContent += chunkValue;
+          
+          if (assistantContent.includes("__METADATA__::")) {
+            const parts = assistantContent.split("__METADATA__::");
+            const cleanContent = parts[0];
+            const metaJson = parts[1];
+            
+            try {
+              const meta = JSON.parse(metaJson);
+              setMessages((prev) => prev.map(m => 
+                m.id === aiMessageId ? { ...m, content: cleanContent, sources: meta.sources } : m
+              ));
+              assistantContent = cleanContent; // For history saving
+            } catch (e) {
+              console.error("Failed to parse metadata", e);
+            }
+          } else {
+            setMessages((prev) => prev.map(m => 
+              m.id === aiMessageId ? { ...m, content: assistantContent } : m
+            ));
+          }
+        }
+      }
 
       setMessages((prev) => {
-        const updated = [...prev, assistantMessage];
-
         if (session?.user?.email) {
           saveConversation({
-            user_id: session.user.email,
+            user_id: session!.user!.email as string,
             module: "chatbot",
             title: `PDF Chat: ${fileName}`,
-            messages: updated.map((m) => ({ role: m.role, content: m.content, id: m.id })),
+            messages: prev.map((m) => ({ role: m.role, content: m.content, id: m.id })),
             session_id: historySessionId.current,
           })
             .then((saveRes) => {
@@ -125,19 +175,13 @@ function ChatbotContent() {
             })
             .catch((e) => console.warn("History save failed:", e));
         }
-
-        return updated;
+        return prev;
       });
+
     } catch (e: any) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err-${Date.now()}`,
-          role: "assistant",
-          content: `❌ ${e.response?.data?.detail || "Failed to get answer. Please try again."}`,
-          timestamp: new Date(),
-        },
-      ]);
+      setMessages((prev) => prev.map(m => 
+        m.id === aiMessageId ? { ...m, content: `❌ ${e.message || "Failed to get answer. Please try again."}` } : m
+      ));
     } finally {
       setIsChatLoading(false);
     }

@@ -199,61 +199,84 @@ function InterviewContent() {
 
     setMockLoading(true);
     try {
-      const res = await evaluateMockAnswer({
-        role: selectedRole,
-        question: currentQ.question,
-        user_answer: userAnswer,
-        conversation_history: conversationHistory,
+      const assistantMsgId = `ai-${currentQIdx}`;
+      const initialAssistantMsg = { id: assistantMsgId, role: "assistant" as const, content: "", timestamp: new Date() };
+      setMessages((prev) => [...prev, initialAssistantMsg]);
+      
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const response = await fetch(`${API_URL}/interview/mock-evaluate-stream`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: selectedRole,
+          question: currentQ.question,
+          user_answer: userAnswer,
+          conversation_history: conversationHistory,
+        }),
       });
 
-      const { evaluation, score, follow_up_question, tips, model_answer_hint } = res.data;
-      const nextIdx = currentQIdx + 1;
-      const isLast = nextIdx >= questions.length;
-
-      let responseContent = `**Evaluation** (Score: ${score}/100)\n\n${evaluation}\n\n`;
-
-      if (tips?.length) {
-        responseContent += `**💡 Tips:**\n${tips.map((t: string) => `• ${t}`).join("\n")}\n\n`;
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
       }
 
-      if (model_answer_hint) {
-        responseContent += `**📝 Strong Answer Includes:**\n${model_answer_hint}\n\n`;
-      }
+      setMockLoading(false);
 
-      if (!isLast) {
-        responseContent += `---\n\n**Question ${nextIdx + 1}/${questions.length}:**\n\n${questions[nextIdx].question}\n\n*Category: ${questions[nextIdx].category} | Difficulty: ${questions[nextIdx].difficulty}*`;
-        setCurrentQIdx(nextIdx);
-      } else {
-        responseContent += "---\n\n🎉 **Mock interview complete!** Great job! Feel free to restart with a new set of questions.";
-      }
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let assistantContent = "";
 
-      const assistantMsg = { id: `ai-${currentQIdx}`, role: "assistant" as const, content: responseContent, timestamp: new Date() };
-
-      const allMsgs = [...messages, userMessage, assistantMsg];
-
-      setConversationHistory((prev) => [...prev, { question: currentQ.question, answer: userAnswer }]);
-      setMessages(() => allMsgs);
-
-      if (session?.user?.email) {
-        try {
-          const saveRes = await saveConversation({
-            user_id: session.user.email,
-            module: "interview",
-            title: `Mock Interview: ${selectedRole}`,
-            messages: allMsgs.map(m => ({ role: m.role, content: m.content, id: m.id })),
-            session_id: historySessionId.current,
-          });
-          if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
-        } catch (e) {
-          console.warn("History save failed:", e);
+      while (reader && !done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunkValue = decoder.decode(value, { stream: true });
+          assistantContent += chunkValue;
+          
+          setMessages((prev) => prev.map(m => 
+            m.id === assistantMsgId ? { ...m, content: assistantContent } : m
+          ));
         }
       }
 
+      const nextIdx = currentQIdx + 1;
+      const isLast = nextIdx >= questions.length;
+      
+      let finalContent = assistantContent;
+      if (!isLast) {
+        finalContent += `\n\n---\n\n**Question ${nextIdx + 1}/${questions.length}:**\n\n${questions[nextIdx].question}\n\n*Category: ${questions[nextIdx].category} | Difficulty: ${questions[nextIdx].difficulty}*`;
+        setCurrentQIdx(nextIdx);
+      } else {
+        finalContent += "\n\n---\n\n🎉 **Mock interview complete!** Great job! Feel free to restart with a new set of questions.";
+      }
+      
+      setMessages((prev) => prev.map(m => 
+        m.id === assistantMsgId ? { ...m, content: finalContent } : m
+      ));
+
+      setConversationHistory((prev) => [...prev, { question: currentQ.question, answer: userAnswer }]);
+
+      setMessages((prev) => {
+        if (session?.user?.email) {
+          saveConversation({
+            user_id: session!.user!.email as string,
+            module: "interview",
+            title: `Mock Interview: ${selectedRole}`,
+            messages: prev.map(m => ({ role: m.role, content: m.content, id: m.id })),
+            session_id: historySessionId.current,
+          })
+            .then((saveRes) => {
+              if (saveRes.data?.id) historySessionId.current = saveRes.data.id;
+            })
+            .catch((e) => console.warn("History save failed:", e));
+        }
+        return prev;
+      });
+
     } catch (e: any) {
-      setMessages((prev) => [
-        ...prev,
-        { id: `err-${currentQIdx}`, role: "assistant", content: "Failed to evaluate answer. Please try again.", timestamp: new Date() },
-      ]);
+      setMessages((prev) => prev.map(m => 
+        m.id === `ai-${currentQIdx}` ? { ...m, content: `❌ ${e.message || "Failed to evaluate answer. Please try again."}` } : m
+      ));
     } finally {
       setMockLoading(false);
     }
