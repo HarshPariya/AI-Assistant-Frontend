@@ -24,9 +24,7 @@ export const sendGeneralChat = (messages: Array<{ role: string; content: string 
 export const analyzeResume = (file: File) => {
   const form = new FormData();
   form.append("file", file);
-  return api.post("/resume/analyze", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return api.post("/resume/analyze", form);
 };
 
 // ── Interview Assistant ────────────────────────────────────────────────────
@@ -51,7 +49,6 @@ export const uploadChatPDF = (file: File) => {
   const form = new FormData();
   form.append("file", file);
   return api.post("/chat/upload", form, {
-    headers: { "Content-Type": "multipart/form-data" },
     timeout: 180000,
   });
 };
@@ -67,7 +64,6 @@ export const uploadResearchPDFs = (files: File[]) => {
   const form = new FormData();
   files.forEach((f) => form.append("files", f));
   return api.post("/research/upload", form, {
-    headers: { "Content-Type": "multipart/form-data" },
     timeout: 180000,
   });
 };
@@ -82,9 +78,7 @@ export const performResearchAction = (data: {
 export const analyzeImage = (file: File) => {
   const form = new FormData();
   form.append("file", file);
-  return api.post("/vision/analyze", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return api.post("/vision/analyze", form);
 };
 
 export const askAboutImage = (session_id: string, question: string) =>
@@ -119,7 +113,5 @@ export const deleteConversation = (session_id: string, user_id: string) =>
 export const transcribeAudio = (file: Blob, filename: string = "audio.webm") => {
   const form = new FormData();
   form.append("file", file, filename);
-  return api.post("/voice/transcribe", form, {
-    headers: { "Content-Type": "multipart/form-data" },
-  });
+  return api.post("/voice/transcribe", form);
 };
