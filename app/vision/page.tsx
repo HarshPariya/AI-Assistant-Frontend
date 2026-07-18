@@ -209,7 +209,7 @@ export default function VisionPage() {
               accept=".jpg,.jpeg,.png,.webp,.gif"
               label="Drop your image here"
               description="or click to browse"
-              maxSizeMB={10}
+              maxSizeMB={20}
               accentHex="#a78bfa"
             />
             {uploadError && (
