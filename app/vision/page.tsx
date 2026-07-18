@@ -119,13 +119,16 @@ export default function VisionPage() {
           const chunkValue = decoder.decode(value, { stream: true });
           assistantContent += chunkValue;
           
-          if (assistantContent.includes("__METADATA__::")) {
-            const parts = assistantContent.split("__METADATA__::");
-            assistantContent = parts[0];
+          let displayContent = assistantContent;
+          if (displayContent.includes("__METADATA__::")) {
+            const parts = displayContent.split("__METADATA__::");
+            displayContent = parts[0];
           }
           
+          displayContent = displayContent.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trim();
+          
           setMessages((prev) => prev.map(m => 
-            m.id === aiMessageId ? { ...m, content: assistantContent } : m
+            m.id === aiMessageId ? { ...m, content: displayContent } : m
           ));
         }
       }
