@@ -55,12 +55,14 @@ export default function FileUpload({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: accept.split(",").reduce((acc, ext) => {
+    accept: accept === "image/*" ? { "image/*": [] } : accept.split(",").reduce((acc, ext) => {
       if (ext.trim() === ".pdf") acc["application/pdf"] = [".pdf"];
       if (ext.trim() === ".png") acc["image/png"] = [".png"];
       if (ext.trim() === ".jpg" || ext.trim() === ".jpeg") acc["image/jpeg"] = [".jpg", ".jpeg"];
       if (ext.trim() === ".webp") acc["image/webp"] = [".webp"];
       if (ext.trim() === ".gif") acc["image/gif"] = [".gif"];
+      if (ext.trim() === ".heic") acc["image/heic"] = [".heic"];
+      if (ext.trim() === ".heif") acc["image/heif"] = [".heif"];
       return acc;
     }, {} as Record<string, string[]>),
     multiple,

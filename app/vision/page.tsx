@@ -118,16 +118,16 @@ export default function VisionPage() {
         if (value) {
           const chunkValue = decoder.decode(value, { stream: true });
           assistantContent += chunkValue;
-          
+
           let displayContent = assistantContent;
           if (displayContent.includes("__METADATA__::")) {
             const parts = displayContent.split("__METADATA__::");
             displayContent = parts[0];
           }
-          
+
           displayContent = displayContent.replace(/<think>[\s\S]*?(<\/think>|$)/g, '').trim();
-          
-          setMessages((prev) => prev.map(m => 
+
+          setMessages((prev) => prev.map(m =>
             m.id === aiMessageId ? { ...m, content: displayContent } : m
           ));
         }
@@ -151,7 +151,7 @@ export default function VisionPage() {
       });
 
     } catch (e: any) {
-      setMessages((prev) => prev.map(m => 
+      setMessages((prev) => prev.map(m =>
         m.role === "assistant" && !m.content ? { ...m, content: `❌ ${e.message || "Failed to answer. Please try again."}` } : m
       ));
     } finally {
@@ -294,15 +294,15 @@ export default function VisionPage() {
               </h3>
             </div>
             <div className="flex-1 overflow-hidden">
-          <ChatInterface
-                messages={messages}
-                onSendMessage={handleAsk}
-                isLoading={isChatLoading}
-                placeholder="Ask me anything about this image..."
-                accentColor="from-violet-500 to-purple-500"
-                accentHex="#a78bfa"
-                allowFileUpload={false}
-                setMessages={setMessages}
+              tInterface
+              messages={messages}
+              onSendMessage={handleAsk}
+              isLoading={isChatLoading}
+              placeholder="Ask me anything about this image..."
+              accentColor="from-violet-500 to-purple-500"
+              accentHex="#a78bfa"
+              allowFileUpload={false}
+              setMessages={setMessages}
               />
             </div>
           </div>
