@@ -181,11 +181,12 @@ export default function ResearchPage() {
             onFileSelect={() => {}}
             onMultipleFilesSelect={handleUpload}
             isLoading={isUploading}
-            accept=".pdf"
+            accept=".pdf,.jpg,.jpeg,.png,.webp,.gif"
             multiple
-            label="Drop PDF files here"
-            description="or click to browse — up to 10 files"
+            label="Upload Research Documents or Images"
+            description="Upload up to 10 files — PDFs, photos of notes, or screenshots"
             accentHex="#e879f9"
+            maxSizeMB={20}
           />
           {uploadError && (
             <div className="mt-4 p-3 rounded-xl text-sm text-center"
