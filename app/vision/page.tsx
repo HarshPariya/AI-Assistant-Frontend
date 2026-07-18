@@ -294,7 +294,7 @@ export default function VisionPage() {
               </h3>
             </div>
             <div className="flex-1 overflow-hidden">
-              tInterface
+              <ChatInterface
               messages={messages}
               onSendMessage={handleAsk}
               isLoading={isChatLoading}
