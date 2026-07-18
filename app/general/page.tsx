@@ -66,7 +66,15 @@ function GeneralChatContent() {
       timestamp: new Date(),
     };
     
-    setMessages((prev) => [...prev, userMessage]);
+    const aiMessageId = `ai-${Date.now()}`;
+    const initialAssistantMessage: Message = {
+      id: aiMessageId,
+      role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage, initialAssistantMessage]);
     setIsLoading(true);
 
     try {
@@ -75,47 +83,76 @@ function GeneralChatContent() {
         content: m.content || (m.file ? `Please analyze the attached file: ${m.file.name}` : ""),
       }));
 
-      const res = await sendGeneralChat(apiMessages, file);
+      const formData = new FormData();
+      formData.append("messages", JSON.stringify(apiMessages));
+      if (file) {
+        formData.append("file", file);
+      }
+
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
       
-      const assistantMessage: Message = {
-        id: `ai-${Date.now()}`,
-        role: "assistant",
-        content: res.data.answer,
-        timestamp: new Date(),
-      };
-      
-      const updatedMessages = [...messages, userMessage, assistantMessage];
-      setMessages(() => updatedMessages);
+      const response = await fetch(`${API_URL}/general/stream`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP Error: ${response.status}`);
+      }
+
+      setIsLoading(false);
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let done = false;
+      let assistantContent = "";
+
+      while (reader && !done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        if (value) {
+          const chunkValue = decoder.decode(value, { stream: true });
+          assistantContent += chunkValue;
+          
+          setMessages((prev) => prev.map(m => 
+            m.id === aiMessageId ? { ...m, content: assistantContent } : m
+          ));
+        }
+      }
 
       // Auto-save history if user is signed in
       if (session?.user?.email) {
         try {
-          const saveRes = await saveConversation({
-            user_id: session.user.email,
-            module: "general",
-            messages: updatedMessages.map(m => ({
-              role: m.role,
-              content: m.content,
-              id: m.id,
-            })),
-            session_id: historySessionId.current,
+          // Re-fetch the final state to ensure we save the fully completed message
+          setMessages(currentMessages => {
+             saveConversation({
+              user_id: session.user.email as string,
+              module: "general",
+              messages: currentMessages.map(m => ({
+                role: m.role,
+                content: m.content,
+                id: m.id,
+              })),
+              session_id: historySessionId.current,
+            }).then(saveRes => {
+              if (saveRes.data?.id) {
+                historySessionId.current = saveRes.data.id;
+              }
+            }).catch(e => console.warn("History save failed:", e));
+            
+            return currentMessages;
           });
-          // Store session ID so future messages update same session
-          if (saveRes.data?.id) {
-            historySessionId.current = saveRes.data.id;
-          }
         } catch (e) {
-          // History save failure is non-blocking
           console.warn("History save failed:", e);
         }
       }
     } catch (error: any) {
       setMessages((prev) => [
-        ...prev,
+        ...prev.filter(m => m.id !== aiMessageId), // Remove the empty initial ai message if error
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          content: "❌ Sorry, I encountered an error. Please check your Groq API key or try again.",
+          content: "❌ Sorry, I encountered an error. Please check your network or try again.",
           timestamp: new Date(),
         },
       ]);
