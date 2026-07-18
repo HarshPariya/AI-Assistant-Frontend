@@ -126,7 +126,7 @@ function GeneralChatContent() {
           // Re-fetch the final state to ensure we save the fully completed message
           setMessages(currentMessages => {
              saveConversation({
-              user_id: session.user.email as string,
+              user_id: session!.user!.email as string,
               module: "general",
               messages: currentMessages.map(m => ({
                 role: m.role,
