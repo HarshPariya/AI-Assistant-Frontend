@@ -175,7 +175,7 @@ export default function ResearchPage() {
               <Upload size={24} className="text-white" />
             </div>
             <h2 className="text-xl font-bold mb-2" style={{ color: "var(--fg)" }}>Upload Research PDFs</h2>
-            <p className="text-sm" style={{ color: "var(--muted)" }}>Upload up to 10 PDFs — papers, reports, textbooks</p>
+            <p className="text-sm" style={{ color: "var(--muted)" }}>Upload up to 3 PDFs — papers, reports, textbooks</p>
           </div>
           <FileUpload
             onFileSelect={() => {}}
@@ -184,7 +184,7 @@ export default function ResearchPage() {
             accept=".pdf,.jpg,.jpeg,.png,.webp,.gif"
             multiple
             label="Upload Research Documents or Images"
-            description="Upload up to 10 files — PDFs, photos of notes, or screenshots"
+            description="Upload up to 3 files — PDFs, photos of notes, or screenshots"
             accentHex="#e879f9"
             maxSizeMB={20}
           />
